@@ -1,9 +1,8 @@
-
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ANALISADOR QUADRANTE MEGA</title>
     <style>
         body {
@@ -47,6 +46,8 @@
             border: none;
             cursor: pointer;
             font-size: 16px;
+            touch-action: manipulation;
+            min-height: 44px;
         }
         .btn:hover {
             background-color: #0056b3;
@@ -85,10 +86,87 @@
             margin-right: 10px;
             border: 1px solid #000;
         }
+        .button-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 10px 0;
+        }
+        #rotate-warning {
+            display: none;
+            background: #fff3cd;
+            color: #856404;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            text-align: center;
+            border: 1px solid #ffeeba;
+        }
+
+        /* Media Queries para Responsividade */
+        @media (max-width: 768px) {
+            body {
+                margin: 10px;
+                font-size: 14px;
+            }
+            
+            table {
+                width: 100%;
+                margin: 5px 0;
+            }
+            
+            th, td {
+                padding: 4px;
+                width: auto;
+                height: 30px;
+                font-size: 12px;
+            }
+            
+            .btn {
+                padding: 8px 12px;
+                font-size: 14px;
+                margin: 5px;
+                display: block;
+                width: calc(100% - 10px);
+            }
+            
+            #table2 {
+                display: block;
+                overflow-x: auto;
+                white-space: nowrap;
+            }
+            
+            .legend {
+                width: calc(100% - 20px);
+                margin: 10px 0;
+            }
+            
+            .button-container {
+                flex-direction: column;
+                gap: 5px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 20px;
+            }
+            
+            th, td {
+                padding: 2px;
+                height: 25px;
+                font-size: 10px;
+            }
+        }
     </style>
 </head>
 <body>
-    <h1>Tabela de Dezenas com Legenda</h1>
+    <div id="rotate-warning">
+        <p>Para melhor visualização, gire seu dispositivo para o modo paisagem.</p>
+    </div>
+    
+    <h1>ANALISADOR QUADRANTE MEGA</h1>
+    
     <!-- Tabela 1 -->
     <table id="table1">
         <tbody>
@@ -122,8 +200,10 @@
     </table>
 
     <!-- Botões -->
-    <button class="btn" id="clearButton">Limpar Dados</button>
-    <button class="btn" id="analyzeButton">Apuração</button>
+    <div class="button-container">
+        <button class="btn" id="clearButton">Limpar Dados</button>
+        <button class="btn" id="analyzeButton">Apuração</button>
+    </div>
 
     <!-- Legenda -->
     <div id="legendContainer" class="legend"></div>
@@ -217,6 +297,14 @@
                 }
             });
         });
+
+        // Verificar orientação do dispositivo
+        window.addEventListener('resize', checkOrientation);
+        function checkOrientation() {
+            const warning = document.getElementById('rotate-warning');
+            warning.style.display = (window.innerHeight > window.innerWidth) ? 'block' : 'none';
+        }
+        checkOrientation();
     </script>
 </body>
 </html>
