@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ANALISADOR MEGA SENA 2.0</title>
+    <title>ANALISADOR QUADRANTE MEGA</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -51,6 +51,12 @@
         }
         .btn:hover {
             background-color: #0056b3;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+        }
+        .btn-secondary:hover {
+            background-color: #5a6268;
         }
         .color-segment {
             height: 100%;
@@ -102,6 +108,36 @@
             text-align: center;
             border: 1px solid #ffeeba;
         }
+        .search-container {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+        .search-input {
+            padding: 10px;
+            width: 120px;
+            margin-right: 10px;
+        }
+        .search-result {
+            margin-top: 10px;
+            padding: 10px;
+            background: #e9ecef;
+            border-radius: 5px;
+            display: none;
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(0,0,0,.3);
+            border-radius: 50%;
+            border-top-color: #007bff;
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
 
         /* Media Queries para Responsividade */
         @media (max-width: 768px) {
@@ -145,6 +181,15 @@
                 flex-direction: column;
                 gap: 5px;
             }
+            
+            .search-container {
+                padding: 10px;
+            }
+            
+            .search-input {
+                width: calc(100% - 130px);
+                margin-bottom: 10px;
+            }
         }
 
         @media (max-width: 480px) {
@@ -166,6 +211,15 @@
     </div>
     
     <h1>ANALISADOR QUADRANTE MEGA</h1>
+    
+    <!-- Busca de concurso -->
+    <div class="search-container">
+        <h3>Buscar Concurso Oficial</h3>
+        <input type="number" id="concursoInput" class="search-input" placeholder="Número do concurso">
+        <button class="btn btn-secondary" id="searchButton">Buscar</button>
+        <div id="loadingIndicator" style="display: none;"><span class="loading"></span> Buscando resultados...</div>
+        <div id="searchResult" class="search-result"></div>
+    </div>
     
     <!-- Tabela 1 -->
     <table id="table1">
@@ -305,6 +359,76 @@
             warning.style.display = (window.innerHeight > window.innerWidth) ? 'block' : 'none';
         }
         checkOrientation();
+
+        // Função para buscar resultados oficiais
+        document.getElementById("searchButton").addEventListener("click", async () => {
+            const concurso = document.getElementById("concursoInput").value;
+            const loadingIndicator = document.getElementById("loadingIndicator");
+            const searchResult = document.getElementById("searchResult");
+            
+            if (!concurso) {
+                searchResult.style.display = "block";
+                searchResult.innerHTML = "Por favor, informe o número do concurso";
+                return;
+            }
+            
+            loadingIndicator.style.display = "block";
+            searchResult.style.display = "none";
+            
+            try {
+                // Usando proxy CORS para acessar a API da Caixa
+                const response = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(`https://servicebus2.caixa.gov.br/portaldeloterias/api/megasena/${concurso}`)}`);
+                
+                if (!response.ok) throw new Error("Erro na requisição");
+                
+                const data = await response.json();
+                const result = JSON.parse(data.contents);
+                
+                if (result.error) {
+                    throw new Error(result.error);
+                }
+                
+                // Exibir resultado
+                searchResult.style.display = "block";
+                searchResult.innerHTML = `
+                    <p><strong>Concurso ${result.numero}</strong> - ${new Date(result.dataApuracao).toLocaleDateString()}</p>
+                    <p>Dezenas sorteadas: ${result.listaDezenas.join(", ")}</p>
+                    <button class="btn" id="addResultButton" style="margin-top: 10px;">Adicionar à Tabela</button>
+                `;
+                
+                // Adicionar evento ao botão de adicionar
+                document.getElementById("addResultButton").addEventListener("click", () => {
+                    addResultToTable(result.numero, result.listaDezenas);
+                });
+                
+            } catch (error) {
+                searchResult.style.display = "block";
+                searchResult.innerHTML = `Erro ao buscar concurso: ${error.message}`;
+            } finally {
+                loadingIndicator.style.display = "none";
+            }
+        });
+        
+        // Função para adicionar resultado à tabela
+        function addResultToTable(concurso, dezenas) {
+            const tableRows = document.querySelectorAll("#table2 tbody tr");
+            
+            // Encontrar primeira linha vazia
+            for (let row of tableRows) {
+                const firstCell = row.cells[0];
+                if (!firstCell.textContent.trim()) {
+                    // Preencher a linha
+                    firstCell.textContent = concurso;
+                    for (let i = 0; i < 6; i++) {
+                        row.cells[i+1].textContent = dezenas[i];
+                    }
+                    return;
+                }
+            }
+            
+            // Se todas as linhas estiverem preenchidas
+            alert("Todas as linhas da tabela estão preenchidas. Limpe algumas linhas antes de adicionar novos resultados.");
+        }
     </script>
 </body>
 </html>
