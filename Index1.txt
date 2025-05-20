@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tabela de Dezenas com Legenda</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        table {
+            border-collapse: collapse;
+            margin: 10px;
+        }
+        th, td {
+            border: 1px solid #000;
+            padding: 8px;
+            text-align: center;
+            width: 50px;
+            height: 50px;
+            font-size: 14px;
+            position: relative;
+        }
+        #table1 {
+            border: 2px solid black;
+            margin-bottom: 20px;
+        }
+        #table2 {
+            margin-top: 20px;
+        }
+        /* Quadrantes */
+        #table1 tr:nth-child(3) td, 
+        #table1 tr:nth-child(6) td {
+            border-bottom: 3px solid black;
+        }
+        #table1 td:nth-child(5), 
+        #table1 td:nth-child(10) {
+            border-right: 3px solid black;
+        }
+        .btn {
+            margin: 10px;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .color-segment {
+            height: 100%;
+            width: 100%;
+            display: inline-block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+        .cell-number {
+            position: relative;
+            z-index: 2;
+            color: black;
+            font-weight: bold;
+        }
+        .legend {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            background: #f9f9f9;
+            border-radius: 5px;
+            display: inline-block;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+            border: 1px solid #000;
+        }
+    </style>
+</head>
+<body>
+    <h1>Tabela de Dezenas com Legenda</h1>
+    <!-- Tabela 1 -->
+    <table id="table1">
+        <tbody>
+            <!-- Preenchida dinamicamente com JS -->
+        </tbody>
+    </table>
+
+    <!-- Tabela 2 -->
+    <table id="table2">
+        <thead>
+            <tr>
+                <th>N° Concurso</th>
+                <th>Dez 01</th>
+                <th>Dez 02</th>
+                <th>Dez 03</th>
+                <th>Dez 04</th>
+                <th>Dez 05</th>
+                <th>Dez 06</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- 7 Linhas -->
+            <tr><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td></tr>
+            <tr><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td></tr>
+            <tr><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td></tr>
+            <tr><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td></tr>
+            <tr><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td></tr>
+            <tr><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td></tr>
+            <tr><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td></tr>
+        </tbody>
+    </table>
+
+    <!-- Botões -->
+    <button class="btn" id="clearButton">Limpar Dados</button>
+    <button class="btn" id="analyzeButton">Apuração</button>
+
+    <!-- Legenda -->
+    <div id="legendContainer" class="legend"></div>
+
+    <script>
+        // Gerar tabela 1 com quadrantes
+        const table1 = document.getElementById("table1").getElementsByTagName("tbody")[0];
+        let number = 1;
+        for (let row = 0; row < 6; row++) {
+            const tr = document.createElement("tr");
+            for (let col = 0; col < 10; col++) {
+                const td = document.createElement("td");
+                td.textContent = number.toString().padStart(2, "0");
+                td.dataset.value = number;
+                tr.appendChild(td);
+                number++;
+            }
+            table1.appendChild(tr);
+        }
+
+        // Função para limpar cores
+        document.getElementById("clearButton").addEventListener("click", () => {
+            const cells = document.querySelectorAll("#table1 td");
+            cells.forEach((cell) => {
+                cell.style.background = "";
+                cell.innerHTML = `<span class="cell-number">${cell.dataset.value.padStart(2, "0")}</span>`;
+            });
+            document.getElementById("legendContainer").innerHTML = "";
+        });
+
+        // Função de apuração
+        document.getElementById("analyzeButton").addEventListener("click", () => {
+            const table2Rows = document.querySelectorAll("#table2 tbody tr");
+            const table1Cells = document.querySelectorAll("#table1 td");
+            const colors = ["red", "orange", "yellow", "lightblue", "purple", "green", "pink"];
+            const legendContainer = document.getElementById("legendContainer");
+
+            // Resetando cores antes da apuração
+            table1Cells.forEach((cell) => {
+                cell.style.background = "";
+                cell.innerHTML = `<span class="cell-number">${cell.dataset.value.padStart(2, "0")}</span>`;
+            });
+            legendContainer.innerHTML = "";
+
+            // Mapear números e concursos
+            const numberOccurrences = {};
+
+            table2Rows.forEach((row, rowIndex) => {
+                const cells = row.querySelectorAll("td");
+                cells.forEach((cell, cellIndex) => {
+                    if (cellIndex > 0 && cell.textContent.trim()) {
+                        const value = parseInt(cell.textContent.trim());
+                        if (!numberOccurrences[value]) {
+                            numberOccurrences[value] = [];
+                        }
+                        numberOccurrences[value].push(rowIndex);
+                    }
+                });
+            });
+
+            // Aplicar cores às células da tabela 1
+            table1Cells.forEach((cell) => {
+                const value = parseInt(cell.dataset.value);
+                if (numberOccurrences[value]) {
+                    const occurrences = numberOccurrences[value];
+                    const uniqueColors = [...new Set(occurrences.map((index) => colors[index]))];
+                    const totalColors = uniqueColors.length;
+
+                    if (totalColors > 0) {
+                        cell.innerHTML = `<span class="cell-number">${cell.dataset.value.padStart(2, "0")}</span>`;
+                        uniqueColors.forEach((color, idx) => {
+                            const segment = document.createElement("div");
+                            segment.className = "color-segment";
+                            segment.style.backgroundColor = color;
+                            segment.style.width = `${100 / totalColors}%`;
+                            segment.style.left = `${(100 / totalColors) * idx}%`;
+                            cell.appendChild(segment);
+                        });
+                    }
+                }
+            });
+
+            // Gerar legenda
+            table2Rows.forEach((row, rowIndex) => {
+                const concursoNumber = row.querySelector("td").textContent.trim();
+                if (concursoNumber) {
+                    const legendItem = document.createElement("div");
+                    legendItem.className = "legend-item";
+                    legendItem.innerHTML = `<div class="legend-color" style="background-color: ${colors[rowIndex]}"></div> Concurso ${concursoNumber}`;
+                    legendContainer.appendChild(legendItem);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
