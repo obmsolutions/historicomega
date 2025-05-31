@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>ANALISADOR MEGA SENA</title>
+<style>
+    * {
+        box-sizing: border-box;
+    }
+    
+    body { 
+        font-family: Arial, sans-serif; 
+        margin: 0;
+        padding: 10px;
+        min-width: 320px;
+        width: 100%;
+        overflow-x: hidden;
+    }
+    
+    /* Tabelas responsivas */
+    .table-container {
+        overflow-x: auto;
+        margin: 10px 0;
+        width: 100%;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    table { 
+        border-collapse: collapse; 
+        margin: 10px auto;
+        width: auto;
+        max-width: 100%;
+    }
+    
+    th, td {
+        border: 1px solid #000;
+        padding: 4px;
+        text-align: center;
+        min-width: 28px;
+        height: 36px;
+        font-size: 12px;
+        position: relative;
+    }
+    
+    #table1 { 
+        border: 2px solid black; 
+        margin-bottom: 10px; 
+    }
+    
+    /* Quadrantes */
+    #table1 tr:nth-child(3) td,
+    #table1 tr:nth-child(6) td { border-bottom: 3px solid black; }
+    #table1 td:nth-child(5),
+    #table1 td:nth-child(10) { border-right: 3px solid black; }
+    
+    /* Botões */
+    .btn {
+        margin: 4px;
+        padding: 8px 12px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        cursor: pointer;
+        font-size: 14px;
+        min-height: 36px;
+        border-radius: 4px;
+        width: calc(50% - 8px);
+    }
+    
+    .btn:hover { background-color: #0056b3; }
+    .btn-secondary {
+        background-color: #6c757d;
+    }
+    .btn-secondary:hover {
+        background-color: #5a6268;
+    }
+    
+    /* Células coloridas */
+    .color-segment {
+        height: 100%;
+        width: 100%;
+        display: inline-block;
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 1;
+    }
+    
+    .cell-number {
+        position: relative;
+        z-index: 2;
+        color: black;
+        font-weight: bold;
+    }
+    
+    /* Container de botões */
+    .button-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        margin: 10px 0;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+    }
+    
+    /* Aviso de rotação */
+    #rotate-warning {
+        display: none;
+        background: #fff3cd;
+        color: #856404;
+        padding: 8px;
+        border-radius: 5px;
+        margin-bottom: 10px;
+        text-align: center;
+        border: 1px solid #ffeeba;
+        font-size: 14px;
+        width: 100%;
+    }
+    
+    /* Busca de concurso */
+    .search-container {
+        margin-bottom: 10px;
+        padding: 8px;
+        background: #f8f9fa;
+        border-radius: 5px;
+        width: 100%;
+    }
+    
+    .search-input {
+        padding: 8px;
+        width: 100%;
+        max-width: 120px;
+        margin-right: 8px;
+        margin-bottom: 8px;
+        font-size: 14px;
+    }
+    
+    .search-result {
+        margin-top: 8px;
+        padding: 8px;
+        background: #e9ecef;
+        border-radius: 5px;
+        display: none;
+        font-size: 14px;
+        width: 100%;
+    }
+    
+    .loading {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        border: 2px solid rgba(0,0,0,.3);
+        border-radius: 50%;
+        border-top-color: #007bff;
+        animation: spin 1s ease-in-out infinite;
+    }
+    
+    @keyframes spin { to { transform: rotate(360deg); } }
+    
+    /* Abas */
+    .tab-container {
+        display: flex;
+        margin-bottom: 10px;
+        border-bottom: 1px solid #ddd;
+        overflow-x: auto;
+        white-space: nowrap;
+        width: 100%;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .tab-button {
+        padding: 8px 12px;
+        background-color: #f1f1f1;
+        border: none;
+        cursor: pointer;
+        font-size: 14px;
+        transition: background-color 0.3s;
+        border-radius: 4px 4px 0 0;
+        margin-right: 4px;
+        flex-shrink: 0;
+    }
+    
+    .tab-button:hover {
+        background-color: #ddd;
+    }
+    
+    .tab-button.active {
+        background-color: #007bff;
+        color: white;
+    }
+    
+    .tab-content {
+        display: none;
+        width: 100%;
+    }
+    
+    .tab-content.active {
+        display: block;
+    }
+    
+    /* Analisador de Dezenas */
+    #dezenasInput {
+        width: 100%;
+        max-width: 100%;
+        height: 100px;
+        padding: 10px;
+        margin: 10px 0;
+        font-size: 14px;
+    }
+    
+    #resultado {
+        margin-top: 10px;
+        background: #f0f0f0;
+        padding: 10px;
+        border-radius: 5px;
+        font-size: 14px;
+        width: 100%;
+    }
+    
+    /* Estilo para célula de número do concurso */
+    .concurso-cell {
+        font-weight: bold;
+        color: white;
+    }
+    
+    h1 {
+        font-size: 20px;
+        text-align: center;
+        margin: 10px 0;
+    }
+    
+    h2, h3 {
+        font-size: 16px;
+        margin: 8px 0;
+    }
+    
+    /* Media queries para telas maiores */
+    @media (min-width: 768px) {
+        body {
+            margin: 15px auto;
+            max-width: 1200px;
+            padding: 15px;
+        }
+        
+        th, td {
+            padding: 6px;
+            min-width: 36px;
+            height: 44px;
+            font-size: 14px;
+        }
+        
+        .btn {
+            padding: 10px 15px;
+            font-size: 16px;
+            min-height: 44px;
+            width: auto;
+        }
+        
+        .search-input {
+            max-width: 150px;
+            margin-bottom: 0;
+        }
+        
+        #rotate-warning {
+            padding: 10px;
+            font-size: 16px;
+        }
+        
+        .tab-button {
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+        
+        #resultado {
+            font-size: 16px;
+        }
+        
+        h1 {
+            font-size: 24px;
+        }
+        
+        h2, h3 {
+            font-size: 18px;
+        }
+    }
+    
+    /* Orientação paisagem */
+    @media (orientation: landscape) {
+        #rotate-warning {
+            display: none !important;
+        }
+        
+        th, td {
+            min-width: 32px;
+            height: 40px;
+        }
+    }
+    
+    /* Ajustes para telas muito pequenas */
+    @media (max-width: 360px) {
+        th, td {
+            min-width: 24px;
+            height: 32px;
+            font-size: 11px;
+            padding: 2px;
+        }
+        
+        .btn {
+            font-size: 13px;
+            padding: 6px 8px;
+            min-height: 32px;
+        }
+    }
+</style>
+</head>
+<body>
+
+<div id="rotate-warning">
+    <p>Para melhor visualização, gire seu dispositivo para o modo paisagem.</p>
+</div>
+
+<h1>ANALISADOR MEGA SENA</h1>
+
+<!-- Abas -->
+<div class="tab-container">
+    <button class="tab-button active" onclick="openTab('quadrante')">Analisador Quadrante</button>
+    <button class="tab-button" onclick="openTab('dezenas')">Analisador de Dezenas</button>
+</div>
+
+<!-- Conteúdo da aba Analisador Quadrante -->
+<div id="quadrante" class="tab-content active">
+    <!-- Busca de concurso -->
+    <div class="search-container">
+        <h3>Buscar Concurso Oficial</h3>
+        <div style="display: flex; flex-wrap: wrap; align-items: center;">
+            <input type="number" id="concursoInput" class="search-input" placeholder="Nº concurso" min="1" />
+            <button class="btn btn-secondary" id="searchButton">Buscar</button>
+        </div>
+        <div id="loadingIndicator" style="display:none;"><span class="loading"></span> Buscando resultados...</div>
+        <div id="searchResult" class="search-result"></div>
+    </div>
+
+    <!-- Tabela 1 -->
+    <div class="table-container">
+        <table id="table1">
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <!-- Tabela 2 -->
+    <div class="table-container">
+        <table id="table2">
+            <thead>
+                <tr>
+                    <th>N° Concurso</th>
+                    <th>Dez 01</th>
+                    <th>Dez 02</th>
+                    <th>Dez 03</th>
+                    <th>Dez 04</th>
+                    <th>Dez 05</th>
+                    <th>Dez 06</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- 10 Linhas para os últimos 10 jogos -->
+                <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Botões -->
+    <div class="button-container">
+        <button class="btn" id="clearButton">Limpar</button>
+        <button class="btn" id="analyzeButton">Apuração</button>
+    </div>
+</div>
+
+<!-- Conteúdo da aba Analisador de Dezenas -->
+<div id="dezenas" class="tab-content">
+    <h2>Analisador de Dezenas</h2>
+    <div>
+        <label for="dezenasInput">Digite as dezenas separadas por espaço:</label><br>
+        <textarea id="dezenasInput" placeholder="Ex: 10 22 32 45 51 59"></textarea><br>
+        <div class="button-container">
+            <button class="btn" onclick="analisarDezenas()">Analisar</button>
+        </div>
+    </div>
+    <div id="resultado"></div>
+</div>
+
+<script>
+    // Função para alternar entre abas
+    function openTab(tabName) {
+        // Esconde todos os conteúdos das abas
+        document.querySelectorAll('.tab-content').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        
+        // Remove a classe 'active' de todos os botões
+        document.querySelectorAll('.tab-button').forEach(button => {
+            button.classList.remove('active');
+        });
+        
+        // Mostra a aba selecionada e marca o botão como ativo
+        document.getElementById(tabName).classList.add('active');
+        event.currentTarget.classList.add('active');
+        
+        // Rolagem para o topo
+        window.scrollTo(0, 0);
+    }
+
+    // Criar tabela1 quadrantes
+    const tbody1 = document.querySelector("#table1 tbody");
+    let num = 1;
+    for(let r=0; r<6; r++){
+        const tr = document.createElement("tr");
+        for(let c=0; c<10; c++){
+            const td = document.createElement("td");
+            td.textContent = String(num).padStart(2, "0");
+            td.dataset.value = num;
+            tr.appendChild(td);
+            num++;
+        }
+        tbody1.appendChild(tr);
+    }
+
+    // Limpar tabela1 cores
+    function clearTable1Colors(){
+        const cells = document.querySelectorAll("#table1 td");
+        cells.forEach(cell => {
+            cell.style.background = "";
+            cell.innerHTML = `<span class="cell-number">${String(cell.dataset.value).padStart(2,"0")}</span>`;
+        });
+    }
+
+    // Limpar tabela2
+    function clearTable2(){
+        const rows = document.querySelectorAll("#table2 tbody tr");
+        rows.forEach(row => {
+            for(let cell of row.cells){
+                cell.textContent = "";
+                cell.style.backgroundColor = "";
+                cell.classList.remove("concurso-cell");
+            }
+        });
+    }
+
+    document.getElementById("clearButton").addEventListener("click", () => {
+        clearTable2();
+        clearTable1Colors();
+        document.getElementById("searchResult").style.display = "none";
+    });
+
+    // Apuração: colore tabela1 conforme tabela2 e colore a coluna de concurso
+    document.getElementById("analyzeButton").addEventListener("click", () => {
+        clearTable1Colors();
+
+        const colors = ["red", "orange", "yellow", "lightblue", "purple", "green", "pink", "blue", "brown", "gray"];
+        const table2rows = document.querySelectorAll("#table2 tbody tr");
+        const numberOccurrences = {};
+
+        // Primeiro, colorir as células de concurso na tabela 2
+        table2rows.forEach((row, i) => {
+            const concursoCell = row.cells[0];
+            if(concursoCell.textContent.trim()) {
+                concursoCell.style.backgroundColor = colors[i];
+                concursoCell.classList.add("concurso-cell");
+            }
+        });
+
+        // Mapear ocorrências dos números
+        table2rows.forEach((row, i) => {
+            const cells = row.querySelectorAll("td");
+            cells.forEach((cell, idx) => {
+                if(idx > 0 && cell.textContent.trim()){
+                    const val = parseInt(cell.textContent.trim());
+                    if(!numberOccurrences[val]) numberOccurrences[val] = [];
+                    numberOccurrences[val].push(i);
+                }
+            });
+        });
+
+        // Colorir a tabela 1 com base nas ocorrências
+        const table1cells = document.querySelectorAll("#table1 td");
+        table1cells.forEach(cell => {
+            const val = parseInt(cell.dataset.value);
+            if(numberOccurrences[val]){
+                const uniqueColors = [...new Set(numberOccurrences[val].map(i => colors[i]))];
+                const count = uniqueColors.length;
+                cell.innerHTML = `<span class="cell-number">${String(val).padStart(2,"0")}</span>`;
+                uniqueColors.forEach((color, idx) => {
+                    const seg = document.createElement("div");
+                    seg.className = "color-segment";
+                    seg.style.backgroundColor = color;
+                    seg.style.width = `${100/count}%`;
+                    seg.style.left = `${(100/count)*idx}%`;
+                    cell.appendChild(seg);
+                });
+            }
+        });
+    });
+
+    // Aviso orientação dispositivo
+    function checkOrientation(){
+        const warn = document.getElementById("rotate-warning");
+        warn.style.display = (window.innerHeight > window.innerWidth) ? "block" : "none";
+    }
+    window.addEventListener("resize", checkOrientation);
+    checkOrientation();
+
+    // Busca concurso (botão Buscar)
+    document.getElementById("searchButton").addEventListener("click", async () => {
+        const concurso = parseInt(document.getElementById("concursoInput").value);
+        const loading = document.getElementById("loadingIndicator");
+        const searchResult = document.getElementById("searchResult");
+
+        if(!concurso || concurso <= 0){
+            searchResult.style.display = "block";
+            searchResult.textContent = "Informe um número válido de concurso.";
+            return;
+        }
+
+        loading.style.display = "inline-block";
+        searchResult.style.display = "none";
+        clearTable1Colors();
+
+        try {
+            const url = `https://api.allorigins.win/get?url=${encodeURIComponent(`https://servicebus2.caixa.gov.br/portaldeloterias/api/megasena/${concurso}`)}`;
+            const response = await fetch(url);
+            if(!response.ok) throw new Error("Erro ao buscar o concurso.");
+
+            const data = await response.json();
+            const result = JSON.parse(data.contents);
+
+            if(result.error) throw new Error(result.error);
+
+            searchResult.style.display = "block";
+            searchResult.innerHTML = `
+                <p><strong>Concurso ${result.numero}</strong> - ${new Date(result.dataApuracao).toLocaleDateString()}</p>
+                <p>Dezenas sorteadas: ${result.listaDezenas.join(", ")}</p>
+                <button class="btn" id="addToTableBtn" style="margin-top:10px;">Adicionar à Tabela</button>
+            `;
+
+            document.getElementById("addToTableBtn").addEventListener("click", () => {
+                addWithPrevious(concurso);
+            });
+        } catch (e) {
+            searchResult.style.display = "block";
+            searchResult.textContent = "Erro: " + e.message;
+        } finally {
+            loading.style.display = "none";
+        }
+    });
+
+    // Função para adicionar concurso atual + últimos 9 anteriores à tabela 2
+    async function addWithPrevious(startConcurso){
+        const loading = document.getElementById("loadingIndicator");
+        loading.style.display = "inline-block";
+
+        const table2rows = document.querySelectorAll("#table2 tbody tr");
+        clearTable2();
+
+        try {
+            let addedCount = 0;
+            for(let c = startConcurso; c > startConcurso - 10; c--){
+                if(c <= 0) break;
+
+                const url = `https://api.allorigins.win/get?url=${encodeURIComponent(`https://servicebus2.caixa.gov.br/portaldeloterias/api/megasena/${c}`)}`;
+                const resp = await fetch(url);
+                if(!resp.ok) continue;
+
+                const data = await resp.json();
+                const res = JSON.parse(data.contents);
+                if(res.error || !res.listaDezenas || res.listaDezenas.length < 6) continue;
+
+                if(addedCount >= table2rows.length) break;
+                const row = table2rows[addedCount];
+                row.cells[0].textContent = res.numero;
+                for(let i=0; i<6; i++){
+                    row.cells[i+1].textContent = res.listaDezenas[i];
+                }
+                addedCount++;
+            }
+        } catch(e){
+            alert("Erro ao adicionar concursos anteriores: " + e.message);
+        } finally {
+            loading.style.display = "none";
+        }
+    }
+
+    // Constantes para o Analisador de Dezenas
+    const FIBONACCI_NUMBERS = [2, 3, 5, 8, 13, 21, 34, 55];
+    const PRIME_NUMBERS = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59];
+    const MOLDURA_NUMBERS = [1,2,3,4,5,6,7,8,9,10,11,21,31,41,51,52,53,54,55,56,57,58,59,60,20,30,40,50];
+    const MIOLO_NUMBERS = [12,13,14,15,16,17,18,19,22,23,24,25,26,27,28,29,32,33,34,35,36,37,38,39,42,43,44,45,46,47,48,49];
+    const QUADRANTES = {
+        Q1: [1,2,3,4,5,11,12,13,14,15,21,22,23,24,25],
+        Q2: [6,7,8,9,10,16,17,18,19,20,26,27,28,29,30],
+        Q3: [31,32,33,34,35,41,42,43,44,45,51,52,53,54,55],
+        Q4: [36,37,38,39,40,46,47,48,49,50,56,57,58,59,60]
+    };
+    const LINHAS = {
+        L1: Array.from({length: 10}, (_, i) => i + 1),
+        L2: Array.from({length: 10}, (_, i) => i + 11),
+        L3: Array.from({length: 10}, (_, i) => i + 21),
+        L4: Array.from({length: 10}, (_, i) => i + 31),
+        L5: Array.from({length: 10}, (_, i) => i + 41),
+        L6: Array.from({length: 10}, (_, i) => i + 51),
+    };
+
+    // Função principal do Analisador de Dezenas
+    function analisarDezenas() {
+        const input = document.getElementById("dezenasInput").value.trim();
+        const dezenas = input.split(/\s+/).map(Number).filter(n => n >= 1 && n <= 60);
+        if (dezenas.length === 0) {
+            document.getElementById("resultado").innerHTML = "Insira dezenas válidas (1-60).";
+            return;
+        }
+
+        const pares = dezenas.filter(n => n % 2 === 0);
+        const impares = dezenas.filter(n => n % 2 !== 0);
+        const multiplos3 = dezenas.filter(n => n % 3 === 0);
+        const soma = dezenas.reduce((a,b) => a + b, 0);
+        const fibonacci = dezenas.filter(n => FIBONACCI_NUMBERS.includes(n));
+        const primos = dezenas.filter(n => PRIME_NUMBERS.includes(n));
+        const moldura = dezenas.filter(n => MOLDURA_NUMBERS.includes(n));
+        const miolo = dezenas.filter(n => MIOLO_NUMBERS.includes(n));
+        const quadrantes = Object.fromEntries(Object.entries(QUADRANTES).map(([q, vals]) => [q, dezenas.filter(n => vals.includes(n))]));
+        const linhas = Object.fromEntries(Object.entries(LINHAS).map(([l, vals]) => [l, dezenas.filter(n => vals.includes(n))]));
+        const sequenciais = dezenas.filter((n, i, arr) => arr.includes(n+1));
+
+        document.getElementById("resultado").innerHTML = `
+            <strong>Total de dezenas:</strong> ${dezenas.length}<br>
+            <strong>Pares:</strong> ${pares.length} [${pares.join(', ')}]<br>
+            <strong>Ímpares:</strong> ${impares.length} [${impares.join(', ')}]<br>
+            <strong>Múltiplos de 3:</strong> ${multiplos3.length} [${multiplos3.join(', ')}]<br>
+            <strong>Soma das dezenas:</strong> ${soma}<br>
+            <strong>Fibonacci:</strong> ${fibonacci.length} [${fibonacci.join(', ')}]<br>
+            <strong>Primos:</strong> ${primos.length} [${primos.join(', ')}]<br>
+            <strong>Moldura:</strong> ${moldura.length} [${moldura.join(', ')}]<br>
+            <strong>Miolo:</strong> ${miolo.length} [${miolo.join(', ')}]<br>
+            <strong>Sequenciais:</strong> ${sequenciais.length > 0 ? sequenciais.join(', ') : 'Nenhuma'}<br>
+            <strong>Quadrantes:</strong><br>
+            ${Object.entries(quadrantes).map(([q, nums]) => `${q}: ${nums.length} [${nums.join(', ')}]`).join('<br>')}<br>
+            <strong>Linhas:</strong><br>
+            ${Object.entries(linhas).map(([l, nums]) => `${l}: ${nums.length} [${nums.join(', ')}]`).join('<br>')}
+        `;
+    }
+</script>
+</body>
+</html>
