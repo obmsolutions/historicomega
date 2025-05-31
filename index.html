@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ANALISADOR MEGA SENA</title>
+<style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    table { border-collapse: collapse; margin: 10px; }
+    th, td {
+        border: 1px solid #000;
+        padding: 8px;
+        text-align: center;
+        width: 50px;
+        height: 50px;
+        font-size: 14px;
+        position: relative;
+    }
+    #table1 { border: 2px solid black; margin-bottom: 10px; }
+    #table2 { margin-top: 20px; }
+    /* Quadrantes */
+    #table1 tr:nth-child(3) td,
+    #table1 tr:nth-child(6) td { border-bottom: 3px solid black; }
+    #table1 td:nth-child(5),
+    #table1 td:nth-child(10) { border-right: 3px solid black; }
+    .btn {
+        margin: 10px;
+        padding: 10px 20px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        cursor: pointer;
+        font-size: 16px;
+        min-height: 44px;
+    }
+    .btn:hover { background-color: #0056b3; }
+    .btn-secondary {
+        background-color: #6c757d;
+    }
+    .btn-secondary:hover {
+        background-color: #5a6268;
+    }
+    .color-segment {
+        height: 100%;
+        width: 100%;
+        display: inline-block;
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 1;
+    }
+    .cell-number {
+        position: relative;
+        z-index: 2;
+        color: black;
+        font-weight: bold;
+    }
+    .button-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin: 10px 0;
+        align-items: center;
+    }
+    #rotate-warning {
+        display: none;
+        background: #fff3cd;
+        color: #856404;
+        padding: 10px;
+        border-radius: 5px;
+        margin-bottom: 15px;
+        text-align: center;
+        border: 1px solid #ffeeba;
+    }
+    .search-container {
+        margin-bottom: 20px;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 5px;
+    }
+    .search-input {
+        padding: 10px;
+        width: 120px;
+        margin-right: 10px;
+    }
+    .search-result {
+        margin-top: 10px;
+        padding: 10px;
+        background: #e9ecef;
+        border-radius: 5px;
+        display: none;
+    }
+    .loading {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 3px solid rgba(0,0,0,.3);
+        border-radius: 50%;
+        border-top-color: #007bff;
+        animation: spin 1s ease-in-out infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    
+    /* Estilos para as abas */
+    .tab-container {
+        display: flex;
+        margin-bottom: 20px;
+        border-bottom: 1px solid #ddd;
+    }
+    .tab-button {
+        padding: 10px 20px;
+        background-color: #f1f1f1;
+        border: none;
+        cursor: pointer;
+        font-size: 16px;
+        transition: background-color 0.3s;
+    }
+    .tab-button:hover {
+        background-color: #ddd;
+    }
+    .tab-button.active {
+        background-color: #007bff;
+        color: white;
+    }
+    .tab-content {
+        display: none;
+    }
+    .tab-content.active {
+        display: block;
+    }
+    
+    /* Estilos para o Analisador de Dezenas */
+    #dezenasInput {
+        width: 100%;
+        max-width: 400px;
+        height: 100px;
+        padding: 10px;
+        margin: 10px 0;
+        font-size: 16px;
+    }
+    #resultado {
+        margin-top: 20px;
+        background: #f0f0f0;
+        padding: 15px;
+        border-radius: 5px;
+    }
+    
+    /* Novo estilo para a coluna de concurso na tabela 2 */
+    #table2 th:first-child,
+    #table2 td:first-child {
+        width: 100px;
+        position: relative;
+    }
+    .concurso-color {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 10px;
+        height: 100%;
+    }
+</style>
+</head>
+<body>
+
+<div id="rotate-warning">
+    <p>Para melhor visualização, gire seu dispositivo para o modo paisagem.</p>
+</div>
+
+<h1>ANALISADOR MEGA SENA</h1>
+
+<!-- Abas -->
+<div class="tab-container">
+    <button class="tab-button active" onclick="openTab('quadrante')">Analisador Quadrante</button>
+    <button class="tab-button" onclick="openTab('dezenas')">Analisador de Dezenas</button>
+</div>
+
+<!-- Conteúdo da aba Analisador Quadrante -->
+<div id="quadrante" class="tab-content active">
+    <!-- Busca de concurso -->
+    <div class="search-container">
+        <h3>Buscar Concurso Oficial</h3>
+        <input type="number" id="concursoInput" class="search-input" placeholder="Número do concurso" min="1" />
+        <button class="btn btn-secondary" id="searchButton">Buscar</button>
+        <div id="loadingIndicator" style="display:none;"><span class="loading"></span> Buscando resultados...</div>
+        <div id="searchResult" class="search-result"></div>
+    </div>
+
+    <!-- Tabela 1 -->
+    <table id="table1">
+        <tbody></tbody>
+    </table>
+
+    <!-- Botões abaixo da Tabela 1 -->
+    <div class="button-container">
+        <button class="btn" id="clearButton">Limpar</button>
+        <button class="btn" id="analyzeButton">Apuração</button>
+    </div>
+
+    <!-- Tabela 2 -->
+    <table id="table2">
+        <thead>
+            <tr>
+                <th>N° Concurso</th>
+                <th>Dez 01</th>
+                <th>Dez 02</th>
+                <th>Dez 03</th>
+                <th>Dez 04</th>
+                <th>Dez 05</th>
+                <th>Dez 06</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- 10 Linhas para os últimos 10 jogos -->
+            <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- Conteúdo da aba Analisador de Dezenas -->
+<div id="dezenas" class="tab-content">
+    <h2>Analisador de Dezenas</h2>
+    <div>
+        <label for="dezenasInput">Digite as dezenas separadas por espaço (ex: 10 22 32 45 51 59):</label><br>
+        <textarea id="dezenasInput"></textarea><br>
+        <button class="btn" onclick="analisarDezenas()">Analisar</button>
+    </div>
+    <div id="resultado"></div>
+</div>
+
+<script>
+    // Função para alternar entre abas
+    function openTab(tabName) {
+        // Esconde todos os conteúdos das abas
+        document.querySelectorAll('.tab-content').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        
+        // Remove a classe 'active' de todos os botões
+        document.querySelectorAll('.tab-button').forEach(button => {
+            button.classList.remove('active');
+        });
+        
+        // Mostra a aba selecionada e marca o botão como ativo
+        document.getElementById(tabName).classList.add('active');
+        event.currentTarget.classList.add('active');
+    }
+
+    // Criar tabela1 quadrantes
+    const tbody1 = document.querySelector("#table1 tbody");
+    let num = 1;
+    for(let r=0; r<6; r++){
+        const tr = document.createElement("tr");
+        for(let c=0; c<10; c++){
+            const td = document.createElement("td");
+            td.textContent = String(num).padStart(2, "0");
+            td.dataset.value = num;
+            tr.appendChild(td);
+            num++;
+        }
+        tbody1.appendChild(tr);
+    }
+
+    // Limpar tabela1 cores e legenda
+    function clearTable1Colors(){
+        const cells = document.querySelectorAll("#table1 td");
+        cells.forEach(cell => {
+            cell.style.background = "";
+            cell.innerHTML = `<span class="cell-number">${String(cell.dataset.value).padStart(2,"0")}</span>`;
+        });
+        
+        // Limpar cores da coluna de concurso
+        const concursoColors = document.querySelectorAll(".concurso-color");
+        concursoColors.forEach(el => el.remove());
+    }
+
+    // Limpar tabela2
+    function clearTable2(){
+        const rows = document.querySelectorAll("#table2 tbody tr");
+        rows.forEach(row => {
+            for(let cell of row.cells){
+                cell.textContent = "";
+            }
+            // Remover cores da coluna de concurso
+            const colorEl = row.querySelector(".concurso-color");
+            if(colorEl) colorEl.remove();
+        });
+    }
+
+    document.getElementById("clearButton").addEventListener("click", () => {
+        clearTable2();
+        clearTable1Colors();
+        document.getElementById("searchResult").style.display = "none";
+    });
+
+    // Apuração: colore tabela1 conforme tabela2 e adiciona cores na coluna de concurso
+    document.getElementById("analyzeButton").addEventListener("click", () => {
+        clearTable1Colors();
+
+        const colors = ["red", "orange", "yellow", "lightblue", "purple", "green", "pink", "blue", "brown", "gray"];
+        const table2rows = document.querySelectorAll("#table2 tbody tr");
+        const numberOccurrences = {};
+
+        table2rows.forEach((row, i) => {
+            const cells = row.querySelectorAll("td");
+            cells.forEach((cell, idx) => {
+                if(idx > 0 && cell.textContent.trim()){
+                    const val = parseInt(cell.textContent.trim());
+                    if(!numberOccurrences[val]) numberOccurrences[val] = [];
+                    numberOccurrences[val].push(i);
+                }
+            });
+        });
+
+        const table1cells = document.querySelectorAll("#table1 td");
+        table1cells.forEach(cell => {
+            const val = parseInt(cell.dataset.value);
+            if(numberOccurrences[val]){
+                const uniqueColors = [...new Set(numberOccurrences[val].map(i => colors[i]))];
+                const count = uniqueColors.length;
+                cell.innerHTML = `<span class="cell-number">${String(val).padStart(2,"0")}</span>`;
+                uniqueColors.forEach((color, idx) => {
+                    const seg = document.createElement("div");
+                    seg.className = "color-segment";
+                    seg.style.backgroundColor = color;
+                    seg.style.width = `${100/count}%`;
+                    seg.style.left = `${(100/count)*idx}%`;
+                    cell.appendChild(seg);
+                });
+            }
+        });
+
+        // Adiciona cores na coluna de concurso
+        table2rows.forEach((row, i) => {
+            const cnum = row.cells[0].textContent.trim();
+            if(cnum){
+                const colorEl = document.createElement("div");
+                colorEl.className = "concurso-color";
+                colorEl.style.backgroundColor = colors[i];
+                row.cells[0].appendChild(colorEl);
+            }
+        });
+    });
+
+    // Aviso orientação dispositivo
+    function checkOrientation(){
+        const warn = document.getElementById("rotate-warning");
+        warn.style.display = (window.innerHeight > window.innerWidth) ? "block" : "none";
+    }
+    window.addEventListener("resize", checkOrientation);
+    checkOrientation();
+
+    // Busca concurso (botão Buscar)
+    document.getElementById("searchButton").addEventListener("click", async () => {
+        const concurso = parseInt(document.getElementById("concursoInput").value);
+        const loading = document.getElementById("loadingIndicator");
+        const searchResult = document.getElementById("searchResult");
+
+        if(!concurso || concurso <= 0){
+            searchResult.style.display = "block";
+            searchResult.textContent = "Informe um número válido de concurso.";
+            return;
+        }
+
+        loading.style.display = "inline-block";
+        searchResult.style.display = "none";
+        clearTable1Colors();
+
+        try {
+            const url = `https://api.allorigins.win/get?url=${encodeURIComponent(`https://servicebus2.caixa.gov.br/portaldeloterias/api/megasena/${concurso}`)}`;
+            const response = await fetch(url);
+            if(!response.ok) throw new Error("Erro ao buscar o concurso.");
+
+            const data = await response.json();
+            const result = JSON.parse(data.contents);
+
+            if(result.error) throw new Error(result.error);
+
+            searchResult.style.display = "block";
+            searchResult.innerHTML = `
+                <p><strong>Concurso ${result.numero}</strong> - ${new Date(result.dataApuracao).toLocaleDateString()}</p>
+                <p>Dezenas sorteadas: ${result.listaDezenas.join(", ")}</p>
+                <button class="btn" id="addToTableBtn" style="margin-top:10px;">Adicionar à Tabela</button>
+            `;
+
+            document.getElementById("addToTableBtn").addEventListener("click", () => {
+                addWithPrevious(concurso);
+            });
+        } catch (e) {
+            searchResult.style.display = "block";
+            searchResult.textContent = "Erro: " + e.message;
+        } finally {
+            loading.style.display = "none";
+        }
+    });
+
+    // Função para adicionar concurso atual + últimos 9 anteriores à tabela 2
+    async function addWithPrevious(startConcurso){
+        const loading = document.getElementById("loadingIndicator");
+        loading.style.display = "inline-block";
+
+        const table2rows = document.querySelectorAll("#table2 tbody tr");
+        clearTable2();
+
+        try {
+            let addedCount = 0;
+            for(let c = startConcurso; c > startConcurso - 10; c--){
+                if(c <= 0) break;
+
+                const url = `https://api.allorigins.win/get?url=${encodeURIComponent(`https://servicebus2.caixa.gov.br/portaldeloterias/api/megasena/${c}`)}`;
+                const resp = await fetch(url);
+                if(!resp.ok) continue;
+
+                const data = await resp.json();
+                const res = JSON.parse(data.contents);
+                if(res.error || !res.listaDezenas || res.listaDezenas.length < 6) continue;
+
+                if(addedCount >= table2rows.length) break;
+                const row = table2rows[addedCount];
+                row.cells[0].textContent = res.numero;
+                for(let i=0; i<6; i++){
+                    row.cells[i+1].textContent = res.listaDezenas[i];
+                }
+                addedCount++;
+            }
+        } catch(e){
+            alert("Erro ao adicionar concursos anteriores: " + e.message);
+        } finally {
+            loading.style.display = "none";
+        }
+    }
+
+    // Constantes para o Analisador de Dezenas
+    const FIBONACCI_NUMBERS = [2, 3, 5, 8, 13, 21, 34, 55];
+    const PRIME_NUMBERS = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59];
+    const MOLDURA_NUMBERS = [1,2,3,4,5,6,7,8,9,10,11,21,31,41,51,52,53,54,55,56,57,58,59,60,20,30,40,50];
+    const MIOLO_NUMBERS = [12,13,14,15,16,17,18,19,22,23,24,25,26,27,28,29,32,33,34,35,36,37,38,39,42,43,44,45,46,47,48,49];
+    const QUADRANTES = {
+        Q1: [1,2,3,4,5,11,12,13,14,15,21,22,23,24,25],
+        Q2: [6,7,8,9,10,16,17,18,19,20,26,27,28,29,30],
+        Q3: [31,32,33,34,35,41,42,43,44,45,51,52,53,54,55],
+        Q4: [36,37,38,39,40,46,47,48,49,50,56,57,58,59,60]
+    };
+    const LINHAS = {
+        L1: Array.from({length: 10}, (_, i) => i + 1),
+        L2: Array.from({length: 10}, (_, i) => i + 11),
+        L3: Array.from({length: 10}, (_, i) => i + 21),
+        L4: Array.from({length: 10}, (_, i) => i + 31),
+        L5: Array.from({length: 10}, (_, i) => i + 41),
+        L6: Array.from({length: 10}, (_, i) => i + 51),
+    };
+
+    // Função principal do Analisador de Dezenas
+    function analisarDezenas() {
+        const input = document.getElementById("dezenasInput").value.trim();
+        const dezenas = input.split(/\s+/).map(Number).filter(n => n >= 1 && n <= 60);
+        if (dezenas.length === 0) {
+            document.getElementById("resultado").innerHTML = "Insira dezenas válidas (1-60).";
+            return;
+        }
+
+        const pares = dezenas.filter(n => n % 2 === 0);
+        const impares = dezenas.filter(n => n % 2 !== 0);
+        const multiplos3 = dezenas.filter(n => n % 3 === 0);
+        const soma = dezenas.reduce((a,b) => a + b, 0);
+        const fibonacci = dezenas.filter(n => FIBONACCI_NUMBERS.includes(n));
+        const primos = dezenas.filter(n => PRIME_NUMBERS.includes(n));
+        const moldura = dezenas.filter(n => MOLDURA_NUMBERS.includes(n));
+        const miolo = dezenas.filter(n => MIOLO_NUMBERS.includes(n));
+        const quadrantes = Object.fromEntries(Object.entries(QUADRANTES).map(([q, vals]) => [q, dezenas.filter(n => vals.includes(n))]));
+        const linhas = Object.fromEntries(Object.entries(LINHAS).map(([l, vals]) => [l, dezenas.filter(n => vals.includes(n))]));
+        const sequenciais = dezenas.filter((n, i, arr) => arr.includes(n+1));
+
+        document.getElementById("resultado").innerHTML = `
+            <strong>Total de dezenas:</strong> ${dezenas.length}<br>
+            <strong>Pares:</strong> ${pares.length} [${pares.join(', ')}]<br>
+            <strong>Ímpares:</strong> ${impares.length} [${impares.join(', ')}]<br>
+            <strong>Múltiplos de 3:</strong> ${multiplos3.length} [${multiplos3.join(', ')}]<br>
+            <strong>Soma das dezenas:</strong> ${soma}<br>
+            <strong>Fibonacci:</strong> ${fibonacci.length} [${fibonacci.join(', ')}]<br>
+            <strong>Primos:</strong> ${primos.length} [${primos.join(', ')}]<br>
+            <strong>Moldura:</strong> ${moldura.length} [${moldura.join(', ')}]<br>
+            <strong>Miolo:</strong> ${miolo.length} [${miolo.join(', ')}]<br>
+            <strong>Sequenciais:</strong> ${sequenciais.length > 0 ? sequenciais.join(', ') : 'Nenhuma'}<br>
+            <strong>Quadrantes:</strong><br>
+            ${Object.entries(quadrantes).map(([q, nums]) => `${q}: ${nums.length} [${nums.join(', ')}]`).join('<br>')}<br>
+            <strong>Linhas:</strong><br>
+            ${Object.entries(linhas).map(([l, nums]) => `${l}: ${nums.length} [${nums.join(', ')}]`).join('<br>')}
+        `;
+    }
+</script>
+</body>
+</html>
